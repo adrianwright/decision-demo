@@ -4,6 +4,12 @@ A synthetic retailer operations demo of Microsoft-Decision-1 on Microsoft Foundr
 It routes reports (`choice`), scores severity (`score`), and assesses immediate human
 escalation (`noul`) in one request. No production actions are connected.
 
+![Earlier Decision-1 versus GPT-5 mini comparison, with deployment labels redacted](docs/images/early-gpt5-comparison.png)
+
+*An earlier GPT-5 mini comparison captured mid-run (8 Decision-1 attempts and
+7 LLM attempts), not a completed paired benchmark. Deployment labels are
+redacted. The current live baseline is GPT-6 Luna.*
+
 ## Run
 
 Requires Python 3.10+ and Azure CLI, signed in to the configured subscription.
@@ -40,8 +46,9 @@ sent to the browser or saved to disk by this app.
 Alternatively set `AZURE_API_KEY` in your terminal environment. Do not place keys
 in `config.json`, HTML, or source control.
 
-Local benchmark exports, screenshots, `.azure/`, `.foundry/`, environment files,
-and logs are also gitignored. Live screens and exported results include your
+Local benchmark exports and screenshots under `test-results/`, `.azure/`,
+`.foundry/`, environment files, and logs are gitignored. The README image is a
+separately sanitized asset. Live screens and exported results include your
 configured project and deployment labels; review them before sharing externally.
 
 **Offline rehearsal:** open `index.html` directly or select Rehearsal in the
