@@ -1,0 +1,13 @@
+{
+  "endpoint": "https://YOUR-FOUNDRY-RESOURCE.cognitiveservices.azure.com",
+  "subscription": "",
+  "project": "YOUR-PROJECT",
+  "decision_deployment": "YOUR-DECISION-DEPLOYMENT",
+  "baseline_deployment": "YOUR-LLM-DEPLOYMENT",
+  "baseline_model_name": "GPT-6 Luna",
+  "baseline_reasoning_effort": "none",
+  "decision_input_usd_per_million": 0.042,
+  "decision_output_usd_per_million": 0,
+  "baseline_input_usd_per_million": 0.10,
+  "baseline_output_usd_per_million": 0.50
+}
