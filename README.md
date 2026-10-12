@@ -4,6 +4,11 @@ A synthetic retailer operations demo of Microsoft-Decision-1 on Microsoft Foundr
 It routes reports (`choice`), scores severity (`score`), and assesses immediate human
 escalation (`noul`) in one request. No production actions are connected.
 
+![Operations desk showing synthetic incidents, human-review thresholds, and team probabilities](docs/images/operations-desk.png)
+
+*The operations desk with live decisions on synthetic incidents: a prioritized
+queue, adjustable routing and escalation thresholds, and a decision inspector.*
+
 ![Earlier Decision-1 versus GPT-5 mini comparison, with deployment labels redacted](docs/images/early-gpt5-comparison.png)
 
 *An earlier GPT-5 mini comparison captured mid-run (8 Decision-1 attempts and
