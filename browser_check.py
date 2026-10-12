@@ -27,7 +27,7 @@ def main():
 
         page.locator("#incident-text").fill("<img src=x onerror=alert(1)> altered incident")
         assert page.locator("#decision-results").count() == 0
-        assert page.locator("#k-count").inner_text() == "0 / 10"
+        assert page.locator("#k-count").inner_text() == "0 / 9"
         assert page.locator("#queue img").count() == 0
 
         page.route("**/api/decision", lambda route: route.fulfill(status=502, content_type="application/json", body='{"error":"Deliberate integration failure"}'))
@@ -40,7 +40,7 @@ def main():
 
         page.locator("#mode").select_option("rehearsal")
         page.locator("#stream").click()
-        page.wait_for_function("() => document.getElementById('k-count').textContent === '10 / 10'", timeout=20_000)
+        page.wait_for_function("() => document.getElementById('k-count').textContent === '9 / 9'", timeout=20_000)
         page.wait_for_function("() => !document.getElementById('reset').disabled")
         assert page.locator("#k-latency").inner_text() == "--"
         assert page.locator("#k-cost").inner_text() == "--"
@@ -78,7 +78,7 @@ def main():
         assert result["status"] == "completed", result
         failures = [(row["id"], model, row[model].get("error")) for row in result["rows"] for model in ("decision", "baseline") if row[model].get("error")]
         assert not failures, failures
-        assert len(result["rows"]) == 10
+        assert len(result["rows"]) == 9
         assert result["baseline_deployment"] == config["baseline_deployment"]
         assert result["baseline_reasoning_effort"] == config["baseline_reasoning_effort"]
         if config["baseline_priced"]:

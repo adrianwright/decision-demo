@@ -87,6 +87,14 @@ def questions(rubric):
     }
 
 
+def decision_request(message, rubric, deployment):
+    return {
+        "model": deployment,
+        "state": {"incident": message},
+        "questions": questions(rubric),
+    }
+
+
 def read_usage(payload):
     usage = payload.get("usage")
     if not isinstance(usage, dict):
@@ -206,13 +214,12 @@ class Foundry:
 
     def call(self, message, rubric, model):
         headers = {"Content-Type": "application/json", **self.auth_headers()}
-        qs = questions(rubric)
         deployment = self.config[f"{model}_deployment"]
         if not deployment:
             raise DemoError("No LLM baseline deployment is configured.", 503)
         if model == "decision":
             path = "/providers/microsoft/v1/systemone"
-            body = {"model": deployment, "state": {"incident": message}, "questions": qs}
+            body = decision_request(message, rubric, deployment)
         else:
             path = "/openai/v1/chat/completions"
             schema = {
@@ -228,7 +235,7 @@ class Foundry:
             body = {
                 "model": deployment,
                 "messages": [
-                    {"role": "system", "content": "Classify the incident using these exact decision questions. Return team, severity (0-3), and escalate (boolean). Do not provide a rationale or invent probabilities.\n" + json.dumps(qs)},
+                    {"role": "system", "content": "Classify the incident using these exact decision questions. Return team, severity (0-3), and escalate (boolean). Do not provide a rationale or invent probabilities.\n" + json.dumps(questions(rubric))},
                     {"role": "user", "content": json.dumps({"incident": message})},
                 ],
                 "reasoning_effort": self.config.get("baseline_reasoning_effort", "minimal"),
@@ -299,6 +306,10 @@ class Handler(BaseHTTPRequestHandler):
                 "baseline_model_name": config.get("baseline_model_name", config.get("baseline_deployment")),
                 "baseline_reasoning_effort": config.get("baseline_reasoning_effort", "minimal"),
                 "baseline_priced": config.get("baseline_input_usd_per_million") is not None and config.get("baseline_output_usd_per_million") is not None,
+                "decision_request_templates": {
+                    rubric: decision_request("", rubric, "YOUR-DECISION-DEPLOYMENT")
+                    for rubric in ("standard", "sales")
+                },
             })
         else:
             self.respond(404, {"error": "Not found."})

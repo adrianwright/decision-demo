@@ -7,7 +7,7 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 from unittest.mock import patch
 
-from app import DemoError, Foundry, Handler, TEAMS, questions, read_baseline, read_decision, validate_input
+from app import DemoError, Foundry, Handler, TEAMS, decision_request, questions, read_baseline, read_decision, validate_input
 
 
 def decision_payload():
@@ -105,6 +105,19 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(body["model"], "test-baseline")
         self.assertEqual(body["reasoning_effort"], "none")
 
+    def test_request_preview_matches_live_body(self):
+        foundry = Foundry({"endpoint": "https://example.cognitiveservices.azure.com", "decision_deployment": "test-decision"})
+        for rubric in ("standard", "sales"):
+            with self.subTest(rubric=rubric), patch.object(foundry, "auth_headers", return_value={}), patch("app.urllib.request.urlopen") as request:
+                request.return_value.__enter__.return_value.read.return_value = json.dumps(decision_payload()).encode()
+                foundry.call("Synthetic incident.", rubric, "decision")
+                body = json.loads(request.call_args.args[0].data)
+            preview = decision_request("Synthetic incident.", rubric, "YOUR-DECISION-DEPLOYMENT")
+            self.assertEqual(body["state"], preview["state"])
+            self.assertEqual(body["questions"], preview["questions"])
+            self.assertEqual(body["model"], "test-decision")
+            self.assertEqual(preview["model"], "YOUR-DECISION-DEPLOYMENT")
+
 
 class HttpTests(unittest.TestCase):
     @classmethod
@@ -129,6 +142,19 @@ class HttpTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as exc:
             urllib.request.urlopen(self.url + "/config.json")
         self.assertEqual(exc.exception.code, 404)
+
+    def test_preview_templates_exclude_connection_details(self):
+        with urllib.request.urlopen(self.url + "/api/config") as response:
+            payload = json.load(response)
+        templates = payload["decision_request_templates"]
+        self.assertEqual(set(templates), {"standard", "sales"})
+        for rubric, template in templates.items():
+            self.assertEqual(template, decision_request("", rubric, "YOUR-DECISION-DEPLOYMENT"))
+        encoded = json.dumps(templates)
+        self.assertNotIn("test-decision", encoded)
+        self.assertNotIn("example.cognitiveservices.azure.com", encoded)
+        self.assertNotIn("Authorization", encoded)
+        self.assertNotIn("api-key", encoded)
 
     def test_cross_origin_blocked(self):
         request = urllib.request.Request(self.url + "/api/decision", data=b'{"message":"test"}', headers={"Content-Type": "application/json", "Origin": "https://evil.example"})

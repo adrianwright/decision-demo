@@ -4,6 +4,42 @@ A synthetic retailer operations demo of Microsoft-Decision-1 on Microsoft Foundr
 It routes reports (`choice`), scores severity (`score`), and assesses immediate human
 escalation (`noul`) in one request. No production actions are connected.
 
+## Why use a decision model?
+
+Use a decision model when you need to **choose, score, or gate an action**, rather
+than write an answer. Reports arrive as messy natural language, but your workflow
+needs a bounded result: which team owns this incident, how serious is it, and
+should a human intervene? You provide the evidence, allowed outcomes, and
+judgment criteria; Microsoft-Decision-1 returns typed numerical decisions that
+your application can use directly. These definitions are supplied at inference
+time, not changes to the model's weights.
+
+The three practical advantages over using a generative LLM for this task are:
+
+- **Speed:** specialized decision inference avoids generating a prose answer.
+  This can reduce latency in repeated routing or screening workflows; measure
+  actual end-to-end performance on your workload.
+- **Cost:** input-only Decision-1 pricing can make high-volume decisions cheaper
+  than generating answers. Savings depend on model rates and request size; the
+  comparison tab measures this demo rather than assuming a universal winner.
+- **Control:** bounded outputs and option probabilities support explicit
+  automation thresholds, an allowed "Cannot tell" outcome, and human review.
+  A structured-output LLM can also return valid labels, but this demo's chat
+  baseline does not expose native option probabilities.
+
+In Incident Dispatch, the model interprets the report and scores ownership,
+severity, and escalation. The application then routes only when the selected
+owner's probability meets your threshold; ambiguous or low-confidence cases go
+to human review. Changing a threshold needs no new inference. Changing the
+business rubric changes the next request's criteria, not the deployed model.
+
+Use ordinary rules when structured inputs already determine the action
+unambiguously. Use a generative LLM when you need an explanation, summary,
+draft, or open-ended reasoning. They can complement a decision model: decide
+first, then generate content if needed. Model probabilities are not guarantees
+of correctness or production calibration; validate criteria and thresholds on
+representative labeled data before enabling consequential actions.
+
 ![Operations desk showing synthetic incidents, human-review thresholds, and team probabilities](docs/images/operations-desk.png)
 
 *The operations desk with live decisions on synthetic incidents: a prioritized
@@ -58,11 +94,31 @@ configured project and deployment labels; review them before sharing externally.
 
 **Offline rehearsal:** open `index.html` directly or select Rehearsal in the
 running dashboard. It is self-contained, with authored fixture responses for the
-ten bundled incidents and the scripted ambiguity-resolution example. It never
+nine bundled incidents and the scripted ambiguity-resolution example. It never
 claims real inference, usage, latency, or cost. Arbitrary edited text requires
 live Foundry. API errors never switch live requests to fixtures.
 
+The nine synthetic reports include timelines, affected scope, diagnostic
+evidence, unaffected services, and remaining uncertainty where known. They cover
+outages, limited degradation, account-access failures, individual billing support,
+and a how-to request. The ambiguous report deliberately lacks enough evidence to
+assign an owner until the presenter adds the scripted payment-failure evidence.
+Rehearsal outputs remain authored fixtures, not new predictions for these reports.
+
 ## Presenter path
+
+Open **Decision definition** (or **View decision definition** on an incident)
+to see three prominent cards of allowed outcomes and their meanings, independent
+of incident evidence. Each card has expandable judgment instructions. Change the
+business rubric to inspect its definition. The incident state and JSON request
+preview are in a separate, initially collapsed section below. Selecting an incident
+or changing the rubric updates the preview without a model call. Definitions come
+from the same backend builder used for live requests, with the deployment name
+replaced by a placeholder and no endpoint or authentication details displayed.
+The view explains that these are inference-time instructions, not model
+training, and that routing/escalation thresholds are local application policy.
+Standalone offline rehearsal shows the state but requires the Python backend
+to display the exact request definitions.
 
 1. Start the incident stream. Observe team probabilities, severity ordering, and
    escalation recommendations. Each live response is inspectable as raw JSON.
@@ -85,7 +141,7 @@ live Foundry. API errors never switch live requests to fixtures.
 
 ## Measurement boundaries
 
-- The ten routing labels are authored expectations, not externally adjudicated
+- The nine routing labels are authored expectations, not externally adjudicated
   ground truth. This small synthetic evaluation is a demonstration, not evidence
   of general model superiority or production calibration.
 - Accuracy is routing-label agreement divided by attempted calls. Failed calls
