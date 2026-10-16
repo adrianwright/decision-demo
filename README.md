@@ -1,8 +1,9 @@
 # Incident Dispatch
 
-A local demo of **Microsoft-Decision-1 on Microsoft Foundry**, using nine synthetic
-retail incidents. Select a report, call the model, and inspect its decisions.
-No ticketing systems or production actions are connected.
+Learn to use **Microsoft-Decision-1 on Microsoft Foundry**: define the judgments
+you need, supply evidence, and interpret typed numerical outputs. Incident
+Dispatch is a small, runnable example using synthetic retail incidents, not a
+production incident-management system.
 
 **Real inference, synthetic inputs.** Every classification and model comparison
 calls Foundry. There are no canned model responses, offline inference mode, or
@@ -13,6 +14,15 @@ with fabricated results.
 
 *The initial operations desk: nine synthetic incidents and a Decision inspector.
 Results and measurements appear only after live model calls.*
+
+## What you will learn
+
+- How incident evidence (`state`), allowed outcomes (`criteria`), and judgment
+  instructions form a decision request.
+- How `choice`, `score`, and `noul` outputs differ, and how an application can use
+  them without asking the model to generate prose.
+- How changing evidence or criteria affects the next request, and how to compare
+  decision inference with a structured-output chat model.
 
 ## What the model does
 
@@ -92,29 +102,130 @@ expiry; the app does not send them to the browser or save them to disk.
 Alternatively, supply `AZURE_API_KEY` in the server's environment. Never place
 keys in `config.json`, HTML, or source control.
 
-## Try the demo
+## Learn the decision model
 
-1. In **Operations desk**, select an incident and choose **Classify incident**
-   in the **Decision inspector**. Inspect owner probabilities, severity,
-   escalation, and the raw typed response. You can edit the incident and classify
-   it again; edits invalidate its previous result.
-2. Select **INC-003**, the deliberately ambiguous report. Classify it, then choose
-   **Add payment failure evidence** and classify again. The button adds synthetic
-   evidence to the input; it does not set the model's answer.
-3. Open **Decision definition** to inspect allowed outcomes and judgment
-   instructions. Expand **Inspect incident evidence and request JSON** for the
-   request preview. Previewing makes no inference call, and deployment identifiers
-   are replaced with a placeholder in the payload.
-4. Select **Peak sales event** in that view, then return to **Operations desk**
-   and classify **INC-006**. This rubric treats confirmed multi-customer payment
-   blockers as Critical. Existing results retain their previous rubric until
-   individually rescored. Outputs can vary; no particular score is guaranteed.
-5. If a baseline is configured, open **Model comparison** and choose
-   **Run comparison**. It evaluates the nine original incidents, not your edited
-   inspector text, using the selected rubric.
+### Define the judgment before calling the model
 
-Definitions come from the same backend request builder used for inference.
-Changing the rubric changes request-time instructions, not model weights.
+Start with the decision your application needs, rather than asking for an
+open-ended answer. Define the evidence, the question type, and what each allowed
+outcome means.
+
+| Request field | Purpose |
+| --- | --- |
+| `model` | Selects your deployed Decision-1 instance by deployment name |
+| `state` | Supplies the incident evidence to judge |
+| `questions` | Defines the named decisions and their types |
+| `instructions` | Explains how to judge each question |
+| `criteria` | Defines the allowed choices, ordered levels, or true/false meanings |
+
+For example, this request asks for a bounded owner decision:
+
+```json
+{
+  "model": "YOUR-DECISION-DEPLOYMENT",
+  "state": {
+    "incident": "New password-reset links are rejected as expired. Existing sessions and checkout still work."
+  },
+  "questions": {
+    "owner": {
+      "type": "choice",
+      "instructions": "Choose the primary owner from the evidence. Choose uncertain when the evidence is insufficient.",
+      "criteria": {
+        "identity": "Sign-in, password reset, and account access",
+        "payments": "Payment authorization and checkout transaction failures",
+        "uncertain": "Insufficient evidence to identify an owner"
+      }
+    }
+  }
+}
+```
+
+Send the request to your Foundry resource's
+`/providers/microsoft/v1/systemone` endpoint. The request's `model` is your
+deployment name; the response's `model` identifies the underlying model.
+The [official guide](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision)
+covers deployment, authentication, and direct API calls. This repository's
+backend demonstrates an authenticated call without third-party Python packages.
+
+### Choose the right output type
+
+Use **`choice`** when exactly one option must be selected. Describe each option
+clearly and include an insufficient-evidence option when appropriate. The
+response includes the selected choice and probabilities for the defined options.
+"Cannot tell" in this example application is a valid outcome, not an API failure.
+
+Use **`score`** for an ordered judgment. Define levels from lowest to highest;
+Decision-1 returns a probability-weighted average of their zero-based indexes.
+On a four-level scale, 2.5 lies between levels 2 and 3. It is not 250% confidence.
+Use scores for ranking and policy thresholds rather than assuming they are
+absolute, calibrated measurements.
+
+Use **`noul`** for a binary judgment, such as whether immediate escalation is
+warranted. It returns a probability from 0 to 1. Your application decides which
+threshold to apply; the model does not execute the action.
+
+Named questions can share the same `state` in a single request. The response's
+`answers` object uses those question names. Inspect that object and `usage` rather
+than expecting a generated explanation.
+
+### Distinguish evidence, criteria, and policy
+
+Changing **evidence** changes the facts being judged. Add a diagnostic observation
+or remove information about affected scope, then make a new request.
+
+Changing **criteria or instructions** changes the judgment being requested. For
+example, a sales-event rubric can assign higher urgency to regional payment
+failures than the standard rubric. These are inference-time instructions, not
+training or changes to model weights, and they do not guarantee a particular
+score.
+
+Changing **application policy** changes how your code uses an existing result.
+A routing threshold can determine whether to act or request human review without
+another inference call. This example fixes its thresholds at 80%; that is not a
+recommended production default.
+
+### Evaluate on your own task
+
+Use representative, labeled examples, including ambiguous and out-of-scope
+inputs. Evaluate label agreement and failure cases as well as latency, cost,
+probability calibration, and the effect of your chosen thresholds. Do not treat
+high confidence as proof of correctness.
+
+A structured-output chat model is a useful comparison, but valid JSON alone
+does not make its behavior or probability outputs equivalent to Decision-1.
+The small comparison in this repository illustrates how to collect measurements;
+it does not establish general model superiority.
+
+## Use this example to explore the concepts
+
+1. **Inspect a real response.** Select an incident in **Operations desk**, choose
+   **Classify incident**, and expand **Inspect raw typed response**. Compare the
+   three answer types with the displayed probabilities and scores.
+2. **Inspect the request.** Open **Decision definition** to read the outcomes and
+   judgment instructions. Expand **Inspect incident evidence and request JSON**.
+   The preview uses the same backend builder as inference, with the deployment
+   name replaced by a placeholder. Previewing does not call the model.
+3. **Experiment with evidence and criteria.** Edit any incident and classify it
+   again. INC-003 includes an optional **Add payment failure evidence** button
+   that changes input text, not the answer. Switch the rubric in **Decision
+   definition** to compare instructions, then rescore an incident. Existing
+   results retain their original rubric until rescored.
+4. **Measure the alternatives.** With a baseline configured, choose **Run
+   comparison** in **Model comparison**. It uses the nine original incidents and
+   the selected rubric, not edited inspector text. Read the measurement
+   boundaries below before interpreting the results.
+
+## Explore the implementation
+
+The request path is **browser -> local Python backend -> Foundry**. To connect
+the UI to the code:
+
+| File | Start here |
+| --- | --- |
+| [`app.py`](app.py) | `questions` and `decision_request` build requests; `Foundry.call` invokes the model; `read_decision` parses typed results |
+| [`index.html`](index.html) | `predict` sends requests; `renderDetail` displays results; `review` and `escalated` apply application thresholds |
+| [`config.example.json`](config.example.json) | Deployment selection, baseline settings, and estimated token rates |
+| [`test_app.py`](test_app.py) | Request-shape, response-validation, and error-handling examples |
 
 ## What is measured
 
