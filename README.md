@@ -1,193 +1,196 @@
 # Incident Dispatch
 
-A synthetic retailer operations demo of Microsoft-Decision-1 on Microsoft Foundry.
-It routes reports (`choice`), scores severity (`score`), and assesses immediate human
-escalation (`noul`) in one request. No production actions are connected.
+A local demo of **Microsoft-Decision-1 on Microsoft Foundry**, using nine synthetic
+retail incidents. Select a report, call the model, and inspect its decisions.
+No ticketing systems or production actions are connected.
 
-## Why use a decision model?
+**Real inference, synthetic inputs.** Every classification and model comparison
+calls Foundry. There are no canned model responses, offline inference mode, or
+simulated latency measurements. Errors remain visible instead of being replaced
+with fabricated results.
 
-Use a decision model when you need to **choose, score, or gate an action**, rather
-than write an answer. Reports arrive as messy natural language, but your workflow
-needs a bounded result: which team owns this incident, how serious is it, and
-should a human intervene? You provide the evidence, allowed outcomes, and
-judgment criteria; Microsoft-Decision-1 returns typed numerical decisions that
-your application can use directly. These definitions are supplied at inference
-time, not changes to the model's weights.
+![Operations desk showing the synthetic incident queue and Decision inspector before classification](docs/images/operations-desk.png)
 
-The three practical advantages over using a generative LLM for this task are:
+*The initial operations desk: nine synthetic incidents and a Decision inspector.
+Results and measurements appear only after live model calls.*
 
-- **Speed:** specialized decision inference avoids generating a prose answer.
-  This can reduce latency in repeated routing or screening workflows; measure
-  actual end-to-end performance on your workload.
-- **Cost:** input-only Decision-1 pricing can make high-volume decisions cheaper
-  than generating answers. Savings depend on model rates and request size; the
-  comparison tab measures this demo rather than assuming a universal winner.
-- **Control:** bounded outputs and option probabilities support explicit
-  automation thresholds, an allowed "Cannot tell" outcome, and human review.
-  A structured-output LLM can also return valid labels, but this demo's chat
-  baseline does not expose native option probabilities.
+## What the model does
 
-In Incident Dispatch, the model interprets the report and scores ownership,
-severity, and escalation. The application then routes only when the selected
-owner's probability meets your threshold; ambiguous or low-confidence cases go
-to human review. Changing a threshold needs no new inference. Changing the
-business rubric changes the next request's criteria, not the deployed model.
+One request supplies incident evidence and three typed questions:
 
-Use ordinary rules when structured inputs already determine the action
-unambiguously. Use a generative LLM when you need an explanation, summary,
-draft, or open-ended reasoning. They can complement a decision model: decide
-first, then generate content if needed. Model probabilities are not guarantees
-of correctness or production calibration; validate criteria and thresholds on
-representative labeled data before enabling consequential actions.
+| Decision | API type | Model output |
+| --- | --- | --- |
+| Who owns the incident? | `choice` | Payments, Identity, Platform, Support, or Cannot tell, with option probabilities |
+| How severe is the impact? | `score` | A probability-weighted score from 0 to 3, with probabilities for Cosmetic, Minor, Major, and Critical |
+| Is immediate escalation warranted? | `noul` | A probability from 0 to 1 |
 
-![Operations desk showing synthetic incidents, human-review thresholds, and team probabilities](docs/images/operations-desk.png)
+Decision-1 returns bounded decisions rather than generated prose. That is useful
+for classification, ranking, and gates; use a generative LLM when you need an
+explanation, summary, or draft. Whether a specialized model is faster or cheaper
+depends on the workload and deployment. The comparison view measures this demo,
+not a universal advantage.
 
-*The operations desk with live decisions on synthetic incidents: a prioritized
-queue, adjustable routing and escalation thresholds, and a decision inspector.*
+The application applies fixed **80% routing and escalation thresholds**. A report
+is eligible for routing only when the owner is not "Cannot tell" and its
+probability is at least 80%. Other cases go to human review. These are illustrative
+application policies, not model guarantees or validated production thresholds.
+The demo displays recommendations; it does not execute them.
 
-![Earlier Decision-1 versus GPT-5 mini comparison, with deployment labels redacted](docs/images/early-gpt5-comparison.png)
+## Run locally
 
-*An earlier GPT-5 mini comparison captured mid-run (8 Decision-1 attempts and
-7 LLM attempts), not a completed paired benchmark. Deployment labels are
-redacted. The current live baseline is GPT-6 Luna.*
+You need:
 
-## Run
+- **Python 3.10+**. The app uses the standard library; no Python or JavaScript
+  packages are needed to run it.
+- A **Foundry resource with Microsoft-Decision-1 deployed**, and permission to
+  invoke it. The app does not provision Azure resources.
+- **Azure CLI**, signed in to the subscription containing that resource, or an
+  API key supplied through `AZURE_API_KEY`.
+- Optionally, a chat model deployment for the comparison view. The template uses
+  **GPT-6 Luna** with structured JSON output and `reasoning_effort: none`.
 
-Requires Python 3.10+ and Azure CLI, signed in to the configured subscription.
-No Python or JavaScript packages are required to run the app.
-
-For a fresh clone, create your local configuration:
+Clone the repository and create your local configuration:
 
 ```powershell
+git clone https://github.com/adrianwright/decision-demo.git
+Set-Location decision-demo
 Copy-Item config.example.json config.json
 ```
 
-Replace the `YOUR-*` placeholders with your Foundry resource endpoint, project
-label, and deployment names. Set `subscription` to your Azure subscription ID,
-or leave it empty to use the Azure CLI's current subscription. The template
-contains no credentials or real deployment identifiers. `config.json` is
-gitignored and remains local.
+Edit `config.json` with your own deployment settings:
+
+| Setting | What to enter |
+| --- | --- |
+| `endpoint` | Foundry resource HTTPS endpoint, without an API path |
+| `subscription` | Subscription ID, or `""` to use the current Azure CLI subscription |
+| `project` | A display label for your project |
+| `decision_deployment` | Your Microsoft-Decision-1 deployment name, not the underlying model name |
+| `baseline_deployment` | Your optional chat model deployment name, or `""` to disable comparison |
+| `baseline_model_name` | Display name of the configured baseline |
+| `baseline_reasoning_effort` | A setting supported by your baseline; the template uses `"none"` |
+| `*_usd_per_million` | Applicable input/output token rates for each model, or `null` for unpriced estimates |
+
+The baseline must support the chat completions API, strict JSON-schema output,
+and the configured reasoning setting. If you change models, update its display
+name, reasoning setting, and prices as well.
+
+Sign in and start the server:
 
 ```powershell
 az login
 python app.py
 ```
 
-Open **http://127.0.0.1:8765**. The server binds to loopback only. An optional
-`--port 8766` selects a different port. Keep this a local demo; the standard-library
-HTTP server is not intended for public hosting.
+Open **http://127.0.0.1:8765**. For another port, run
+`python app.py --port 8766` and open the corresponding URL.
+Opening `index.html` directly cannot run inference: it shows an error and disables
+model actions.
 
-Deploy Microsoft-Decision-1 and the optional GPT-6 Luna baseline in your own
-Foundry resource. This application does not provision or modify Azure resources.
-Edit `config.json` to change deployments. The default Azure CLI subscription is
-not changed; token acquisition selects the configured subscription when provided.
-Azure tokens are cached in backend memory until shortly before expiry, never
-sent to the browser or saved to disk by this app.
+Token acquisition selects the configured subscription without changing your
+Azure CLI default. Tokens are cached in backend memory until shortly before
+expiry; the app does not send them to the browser or save them to disk.
+Alternatively, supply `AZURE_API_KEY` in the server's environment. Never place
+keys in `config.json`, HTML, or source control.
 
-Alternatively set `AZURE_API_KEY` in your terminal environment. Do not place keys
-in `config.json`, HTML, or source control.
+## Try the demo
 
-Local benchmark exports and screenshots under `test-results/`, `.azure/`,
-`.foundry/`, environment files, and logs are gitignored. The README image is a
-separately sanitized asset. Live screens and exported results include your
-configured project and deployment labels; review them before sharing externally.
+1. In **Operations desk**, select an incident and choose **Classify incident**
+   in the **Decision inspector**. Inspect owner probabilities, severity,
+   escalation, and the raw typed response. You can edit the incident and classify
+   it again; edits invalidate its previous result.
+2. Select **INC-003**, the deliberately ambiguous report. Classify it, then choose
+   **Add payment failure evidence** and classify again. The button adds synthetic
+   evidence to the input; it does not set the model's answer.
+3. Open **Decision definition** to inspect allowed outcomes and judgment
+   instructions. Expand **Inspect incident evidence and request JSON** for the
+   request preview. Previewing makes no inference call, and deployment identifiers
+   are replaced with a placeholder in the payload.
+4. Select **Peak sales event** in that view, then return to **Operations desk**
+   and classify **INC-006**. This rubric treats confirmed multi-customer payment
+   blockers as Critical. Existing results retain their previous rubric until
+   individually rescored. Outputs can vary; no particular score is guaranteed.
+5. If a baseline is configured, open **Model comparison** and choose
+   **Run comparison**. It evaluates the nine original incidents, not your edited
+   inspector text, using the selected rubric.
 
-**Offline rehearsal:** open `index.html` directly or select Rehearsal in the
-running dashboard. It is self-contained, with authored fixture responses for the
-nine bundled incidents and the scripted ambiguity-resolution example. It never
-claims real inference, usage, latency, or cost. Arbitrary edited text requires
-live Foundry. API errors never switch live requests to fixtures.
+Definitions come from the same backend request builder used for inference.
+Changing the rubric changes request-time instructions, not model weights.
 
-The nine synthetic reports include timelines, affected scope, diagnostic
-evidence, unaffected services, and remaining uncertainty where known. They cover
-outages, limited degradation, account-access failures, individual billing support,
-and a how-to request. The ambiguous report deliberately lacks enough evidence to
-assign an owner until the presenter adds the scripted payment-failure evidence.
-Rehearsal outputs remain authored fixtures, not new predictions for these reports.
+## What is measured
 
-## Presenter path
+The comparison sends the same incident evidence and decision criteria to
+Decision-1 and the configured chat baseline. The baseline returns structured
+labels and scores, not native option probabilities; the app does not invent
+confidence values for it.
 
-Open **Decision definition** (or **View decision definition** on an incident)
-to see three prominent cards of allowed outcomes and their meanings, independent
-of incident evidence. Each card has expandable judgment instructions. Change the
-business rubric to inspect its definition. The incident state and JSON request
-preview are in a separate, initially collapsed section below. Selecting an incident
-or changing the rubric updates the preview without a model call. Definitions come
-from the same backend builder used for live requests, with the deployment name
-replaced by a placeholder and no endpoint or authentication details displayed.
-The view explains that these are inference-time instructions, not model
-training, and that routing/escalation thresholds are local application policy.
-Standalone offline rehearsal shows the state but requires the Python backend
-to display the exact request definitions.
+- **Dataset:** nine authored synthetic reports with expected routing labels.
+  Those labels are used only for evaluation, never to generate model responses
+  or as part of the inference request. They are not independently adjudicated
+  ground truth, and this sample is not a production benchmark.
+- **Calls:** one excluded warm-up per model, then nine sequential paired
+  evaluations: **20 inference requests** for a completed comparison. There are
+  no hidden retries. A failed warm-up stops the run; failures during measured
+  calls remain visible in the results.
+- **Routing accuracy:** agreement with the authored owner labels divided by
+  attempted measured calls. Failed calls count as misses. Severity and escalation
+  are not included in this accuracy figure.
+- **Latency:** backend HTTPS request/response time, including baseline generation
+  and reasoning, but excluding credential acquisition and UI rendering. p50/p95
+  use successful measured calls only, not inference-only timings.
+- **Usage and cost:** token counts come from model responses. Costs are estimates
+  calculated from those counts and configured rates, not Azure billing totals.
+  Comparison totals cover successful measured calls, excluding warm-ups and any
+  charges incurred by failed calls.
+- **Queue statistics:** the latest successful result per incident, not cumulative
+  usage across rescoring or comparison runs. Reloading clears in-browser results.
 
-1. Start the incident stream. Observe team probabilities, severity ordering, and
-   escalation recommendations. Each live response is inspectable as raw JSON.
-2. Select **INC-003**. Inspect the abstention option and human-review policy. Use
-   **Add payment failure evidence**, then classify again.
-3. Select **Peak sales event**, then **Rescore processed queue**. Inspect
-   **INC-006**, where the rubric explicitly promotes regional, multi-customer
-   payment failures to Critical. Model outputs may vary; the rubric is not a
-   deterministic guarantee.
-4. Adjust routing and escalation thresholds. These application policies operate
-   on existing probabilities without another model call. Routing requires both a
-   non-abstention label and a probability above the threshold.
-5. Open **Model comparison**, run the paired live comparison, then export JSON.
-   Both models receive the same incident state and decision criteria. Each gets
-   one warm-up excluded from the displayed metrics. The LLM uses structured JSON
-   output and `reasoning_effort: none` for this bounded classification task;
-   it does not invent probability distributions. GPT-6 Luna does not support
-   the `minimal` setting used by the previous GPT-5 mini baseline.
-   The configured baseline name and reasoning effort are displayed and exported.
+The template uses USD-per-million-token rates of **$0.042 input / $0 output** for
+Decision-1 and **$0.10 input / $0.50 output** for GPT-6 Luna. Set these to your
+applicable rates and restart the server. Estimates treat input as uncached and
+do not apply cached-input discounts or negotiated Azure pricing.
 
-## Measurement boundaries
+## Data and sharing
 
-- The nine routing labels are authored expectations, not externally adjudicated
-  ground truth. This small synthetic evaluation is a demonstration, not evidence
-  of general model superiority or production calibration.
-- Accuracy is routing-label agreement divided by attempted calls. Failed calls
-  count as misses and remain visible. p50/p95 use successful calls only.
-- Latency covers the backend HTTPS request and response, not inference-only
-  latency. Initial Azure credential acquisition and UI animations are excluded.
-  Calls are sequential, and there are no hidden retries.
-- A stop request takes effect after the current model call. Exports record
-  partial status, rubric, individual responses, token usage, and failures.
-- Queue KPIs cover the latest successful decision per card, not cumulative
-  spend across rescoring or comparisons.
-- Decision-1 cost is estimated using the published launch rate of **$0.042 per
-  million input tokens**, with free output. Output tokens can still appear in
-  API usage. GPT-6 Luna Global (short context) cost uses the [public Azure list
-  rates](https://azure.microsoft.com/en-us/pricing/details/azure-openai/) of
-  **$0.10 per million input tokens** and **$0.50 per million output tokens**,
-  verified on October 12, 2026. This estimate treats all input as uncached;
-  it does not apply cached-input discounts or negotiated Azure agreement rates.
-  Set `baseline_input_usd_per_million` and `baseline_output_usd_per_million`
-  in `config.json` to your applicable rates, then restart the server.
-  Estimates are not Azure billing totals.
-- No generated rationale is displayed. Policy descriptions are deterministic
-  application text, not explanations attributed to the model.
+The bundled reports and the optional payment-failure evidence are synthetic.
+Any incident text you submit, including edits, is sent to your configured Foundry
+resource. Use synthetic or otherwise approved data.
 
-## Validation
+`config.json`, environment files, logs, and local artifacts under `test-results/`,
+`.azure/`, and `.foundry/` are gitignored. Screens and browser-check outputs can
+include project/deployment labels and incident text; review them before sharing.
+
+The server binds to **loopback only**. It is a local demo, not a public hosting
+service. Validate probabilities, criteria, and thresholds on representative
+labeled data before automating consequential actions.
+
+## Checks
+
+Backend tests require no Azure credentials:
 
 ```powershell
 python -m unittest -v
 ```
 
-Optional end-to-end browser check (with the server running and Microsoft Edge
-installed):
+The optional browser integration check requires Microsoft Edge, Playwright,
+the running server, and working deployments for both models:
 
 ```powershell
 python -m pip install playwright
 python browser_check.py
 ```
 
-This check makes live model calls, verifies offline rehearsal, error handling,
-rubric changes, and responsive layouts, and saves screenshots plus the measured
-comparison to the gitignored `test-results` folder.
+It makes billable live model calls, exercises the inspector and comparison,
+checks backend/API failure handling and disabled offline inference, and checks
+mobile and dark-mode layouts. Screenshots and comparison JSON are written to
+the gitignored `test-results` directory.
 
-Use representative labeled data to validate probabilities and tune thresholds
-before any production automation. Never use this demo as the sole basis for
-consequential decisions about individuals.
+## References
 
-[Decision API documentation](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision)
-|
-[Microsoft launch announcement and pricing](https://commandline.microsoft.com/microsoft-decision-1-model-foundry/)
+- [Deploy and use Microsoft-Decision-1](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision)
+- [Microsoft launch announcement and pricing](https://commandline.microsoft.com/microsoft-decision-1-model-foundry/)
+- [Azure OpenAI pricing](https://azure.microsoft.com/en-us/pricing/details/azure-openai/)
+
+## License
+
+This demo's source code is licensed under the [MIT License](LICENSE).
+Azure services and model usage remain subject to their respective terms and charges.

@@ -87,16 +87,13 @@
     .header-right { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .status { display: inline-flex; align-items: center; gap: 8px; color: var(--cp-text-muted); font-size: 12px; }
     .dot { width: 7px; height: 7px; background: var(--cp-success); border-radius: 50%; }
-    .dot.rehearsal { background: var(--cp-warning); }
+    .dot.offline { background: var(--cp-warning); }
     main { max-width: 1600px; margin: auto; padding: 32px; }
     .hero { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 24px; }
     h1 { font-size: clamp(30px, 3vw, 44px); line-height: 1.1; letter-spacing: -1.5px; margin: 8px 0 12px; font-weight: 650; }
     h2 { font-size: 18px; margin: 0; }
     h3 { font-size: 14px; margin: 0 0 8px; }
     p { margin: 8px 0; }
-    .hero p { max-width: 620px; font-size: 15px; color: var(--cp-text-muted); }
-    .hero-note { border-left: 2px solid var(--cp-accent); padding-left: 16px; max-width: 260px; }
-    .hero-note b { display: block; }
     .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
     .card { min-width: 0; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; }
     .kpi { padding: 20px 24px; }
@@ -105,7 +102,7 @@
     .tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--cp-border); margin-bottom: 24px; }
     .tabs button { flex-shrink: 0; border: none; border-radius: 0; background: none; padding: 12px 20px; color: var(--cp-text-muted); border-bottom: 2px solid var(--cp-border); }
     .tabs button[aria-selected="true"] { color: var(--cp-accent); border-bottom-color: var(--cp-accent); }
-    .workspace { display: grid; grid-template-columns: 270px minmax(300px, 1fr) 360px; gap: 20px; align-items: start; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
     .panel-head { padding: 20px; border-bottom: 1px solid var(--cp-border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .panel-body { padding: 20px; }
     .field { display: block; margin-bottom: 16px; }
@@ -116,9 +113,6 @@
     .full { width: 100%; }
     .button-stack { display: grid; gap: 8px; }
     .divider { border-top: 1px solid var(--cp-border); margin: 20px 0; }
-    .step { display: flex; gap: 10px; margin: 14px 0; }
-    .step-num { border: 1px solid var(--cp-border); min-width: 24px; height: 24px; border-radius: 50%; text-align: center; font-size: 12px; color: var(--cp-accent); }
-    .step small { display: block; color: var(--cp-text-muted); }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--cp-border); }
     .toolbar button { font-size: 12px; padding: 5px 10px; }
     .toolbar button.active { background: var(--cp-accent-soft); color: var(--cp-accent); border-color: var(--cp-accent); }
@@ -163,8 +157,6 @@
     .danger-text { color: var(--cp-danger); }
     .explain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .explain-grid .card { padding: 28px; }
-    #explain > .panel-body { margin-bottom: 24px; }
-    .big-num { font-size: 36px; color: var(--cp-accent); font-weight: 650; margin-bottom: 20px; }
     .flow { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 24px; margin: 24px 0; }
     .request-controls { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
     .request-controls .field { width: 280px; max-width: 100%; }
@@ -180,10 +172,9 @@
     .request-endpoint { overflow-wrap: anywhere; }
     footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 32px; font-size: 11px; color: var(--cp-text-muted); }
     [hidden] { display: none !important; }
-    @media (max-width: 1200px) { .workspace { grid-template-columns: 240px 1fr; } #detail { grid-column: 1 / -1; } }
     @media (max-width: 760px) {
       header { padding: 16px; flex-wrap: wrap; } main { padding: 20px 16px; }
-      .hero { align-items: start; flex-direction: column; } .hero-note { max-width: none; }
+      .hero { align-items: start; flex-direction: column; }
       .kpis { grid-template-columns: 1fr 1fr; } .workspace, .comparison, .explain-grid, .request-grid { grid-template-columns: 1fr; }
       .tabs button { padding: 12px; } .kpi { padding: 16px; }
     }
@@ -193,17 +184,15 @@
   <header>
     <div class="brand"><span class="mark" aria-hidden="true">&#8644;</span> Incident Dispatch <span class="tag">DEMO</span></div>
     <div class="header-right">
-      <span class="status" id="connection"><span class="dot rehearsal"></span> Rehearsal / synthetic fixtures</span>
-      <label><span class="muted">Mode </span><select id="mode" aria-label="Model mode"><option value="rehearsal">Rehearsal</option><option value="live" disabled>Live Foundry</option></select></label>
+      <span class="status" id="connection" role="status"><span class="dot offline"></span> Connecting to local backend...</span>
       <button id="theme" aria-label="Toggle light and dark theme">Theme</button>
     </div>
   </header>
   <main>
     <section class="hero">
-      <div><div class="eyebrow">Microsoft Decision-1 / Microsoft Foundry</div><h1>From incident to action.</h1><p>A focused decision layer for the moments that matter. Route the report, score the impact, and know when to hand off to a human.</p></div>
-      <div class="hero-note"><b>Decisions, not paragraphs.</b><span class="muted">One state. Three typed questions.<br>No generated rationale.</span></div>
+      <div><div class="eyebrow">Microsoft Decision-1 / Microsoft Foundry</div><h1>Incident dispatch</h1></div>
     </section>
-    <div id="notice" class="callout" role="status">Rehearsal uses authored fixtures, not model predictions. Open through the Python server to enable live Foundry.</div>
+    <div id="notice" class="callout" role="status" hidden></div>
     <div id="error" role="alert" hidden></div>
     <section class="kpis" aria-label="Queue statistics">
       <div class="card kpi"><div class="eyebrow">Processed</div><div class="value" id="k-count">0 / 9</div><small>Three decisions per incident</small></div>
@@ -219,34 +208,13 @@
     </nav>
     <section id="operations" role="tabpanel" aria-labelledby="tab-operations">
       <div class="workspace">
-        <aside class="card">
-          <div class="panel-head"><h2>Control room</h2></div>
-          <div class="panel-body">
-            <label class="field"><span>Business rubric</span><select id="rubric"><option value="standard">Standard operations</option><option value="sales">Peak sales event</option></select></label>
-            <p class="muted" id="rubric-note">Rank by observed impact. Do not infer missing context.</p>
-            <div class="divider"></div>
-            <label class="field"><span>Route threshold <b id="threshold-label">80%</b></span><input id="threshold" type="range" min="50" max="99" value="80"><small class="muted">A demo policy, not a validated production threshold.</small></label>
-            <label class="field"><span>Escalation threshold <b id="escalate-label">80%</b></span><input id="escalate-threshold" type="range" min="50" max="99" value="80"></label>
-            <div class="button-stack">
-              <button class="primary" id="stream">Start incident stream</button>
-              <button id="rescore">Rescore processed queue</button>
-              <button id="reset">Reset demo</button>
-            </div>
-            <div class="divider"></div>
-            <div class="eyebrow">Presenter path</div>
-            <div class="step"><span class="step-num">1</span><div>Watch the queue move<small>Start the stream to triage reports.</small></div></div>
-            <div class="step"><span class="step-num">2</span><div>Resolve ambiguity<small>Select INC-003 and add context.</small></div></div>
-            <div class="step"><span class="step-num">3</span><div>Change the business lens<small>Switch to peak sales and rescore.</small></div></div>
-            <div class="step"><span class="step-num">4</span><div>Measure, don't assume<small>Compare with the existing LLM.</small></div></div>
-          </div>
-        </aside>
         <section class="card">
           <div class="panel-head"><h2>Incident queue</h2><span class="tag" id="queue-label">Highest impact first</span></div>
           <div class="toolbar" aria-label="Filter incidents">
             <button data-filter="all" class="active">All</button><button data-filter="review">Human review</button><button data-filter="escalated">Escalations</button><button data-filter="pending">Pending</button>
           </div>
           <div class="incidents" id="queue"></div>
-          <div class="panel-body muted" style="font-size:12px">Synthetic retailer incidents. Routing and escalation are advisory; no ticketing system or production tools are connected.</div>
+          <div class="panel-body muted" style="font-size:12px">Synthetic incidents. No production actions.</div>
         </section>
         <aside class="card" id="detail" aria-label="Selected incident details"></aside>
       </div>
@@ -254,7 +222,7 @@
     <section id="model-input" role="tabpanel" aria-labelledby="tab-input" hidden>
       <div class="eval-top"><div><h2>Decision definition</h2><p class="muted">The allowed outcomes and what each means. This reusable definition is independent of any incident.</p></div><span class="tag accent">Reusable across incidents</span></div>
       <div class="request-controls">
-        <label class="field"><span>Business rubric</span><select id="request-rubric"><option value="standard">Standard operations</option><option value="sales">Peak sales event</option></select></label>
+        <label class="field"><select id="request-rubric" aria-label="Business rubric"><option value="standard">Standard operations</option><option value="sales">Peak sales event</option></select></label>
       </div>
       <p class="muted" id="definition-note"></p>
       <div class="explain-grid" id="request-questions"></div>
@@ -272,24 +240,21 @@
       </details>
     </section>
     <section id="evaluate" role="tabpanel" aria-labelledby="tab-evaluate" hidden>
-      <div class="eval-top"><div><h2>Same incidents. Same rubric. Measured outcomes.</h2><p class="muted">9 authored routing labels, one excluded warm-up per model, sequential paired calls. A demonstration set, not a production benchmark.</p></div><div class="eval-controls"><button class="primary" id="run-eval">Run live comparison</button><button id="stop-eval" disabled>Stop after current call</button><button id="export" disabled>Export results</button></div></div>
-      <div class="callout" id="eval-status" role="status">Live Foundry is required. Rehearsal fixtures are never included in performance measurements.</div>
+      <div class="eval-top"><div><h2>Model comparison</h2><p class="muted">9 synthetic incidents. One excluded warm-up per model. Not a production benchmark.</p></div><div class="eval-controls"><button class="primary" id="run-eval">Run comparison</button></div></div>
+      <div class="callout" id="eval-status" role="status" hidden></div>
       <div class="comparison" id="comparison"></div>
       <div class="card table-scroll"><table><thead><tr><th>Incident</th><th>Expected owner</th><th>Decision-1</th><th>LLM baseline</th><th>Decision / LLM latency</th></tr></thead><tbody id="eval-rows"><tr><td colspan="5">Run a comparison to collect actual results.</td></tr></tbody></table></div>
-      <p class="muted">Latency measures the backend's HTTPS request and response, excluding cached credential acquisition. LLM latency includes generation and any reasoning tokens. Failed calls are reported, not replaced with fixtures. Cost estimates use configured list rates, treating input as uncached; cached-input discounts and negotiated Azure rates are not applied.</p>
+      <details><summary>Measurement details</summary><p class="muted">Sequential paired calls. Latency covers backend HTTPS requests, including LLM generation and reasoning, but excludes credential acquisition. Failures count as misses; latency and cost cover successful calls only. Costs use configured list rates for uncached input, not actual billing.</p></details>
     </section>
     <section id="explain" role="tabpanel" aria-labelledby="tab-explain" hidden>
-      <div class="card panel-body"><h2>When you need an action, not an answer.</h2><p>Use a decision model to turn messy evidence into a bounded choice, score, or gate. An incident report is free-form text; your workflow needs an owner, a severity level, and a decision about human escalation, not a paragraph to interpret.</p><p>You supply the evidence, allowed outcomes, and judgment criteria. Microsoft-Decision-1 returns typed numerical decisions your application can use directly. The <b>Decision definition</b> tab shows these inference-time criteria; they do not change the model's weights.</p></div>
       <div class="explain-grid">
-        <div class="card"><div class="big-num">01</div><h2>Speed</h2><p>A decision model scores bounded options rather than generating a paragraph token by token. This can reduce latency for repeated routing or screening.</p><p class="muted">Measure end-to-end latency in your region. Network and workload still matter.</p></div>
-        <div class="card"><div class="big-num">02</div><h2>Cost</h2><p>Keep high-volume classification on a specialized model. Reserve a generative LLM for writing and synthesis.</p><p class="muted">Decision-1: $0.042 per million input tokens, with free output. GPT-6 Luna Global (short context): $0.10 input / $0.50 output per million tokens. Public list-rate estimates assume uncached input, not actual Azure billing.</p></div>
-        <div class="card"><div class="big-num">03</div><h2>Control</h2><p>Typed results and option probabilities make it straightforward to route, rank, gate, or abstain.</p><p class="muted">Probabilities are not guarantees. Validate thresholds on representative labeled data before automating actions.</p></div>
+        <div class="card"><h2>Speed</h2><p>Score bounded options without generating prose.</p><p class="muted">Compare measured latency in this demo.</p></div>
+        <div class="card"><h2>Cost</h2><p>Specialized classification with input-only pricing.</p><p class="muted">Decision-1: $0.042 per million input tokens. Free output.</p></div>
+        <div class="card"><h2>Control</h2><p>Choose an owner, score impact, and flag escalation.</p><p class="muted">Validate probabilities and thresholds before production use.</p></div>
       </div>
       <div class="card flow"><div><span class="eyebrow">State</span><h3>Incident text / JSON</h3></div><span aria-hidden="true">&#8594;</span><div><span class="eyebrow">Decision-1</span><h3>choice + score + noul</h3></div><span aria-hidden="true">&#8594;</span><div><span class="eyebrow">Application policy</span><h3>Route / prioritize / review</h3></div><span aria-hidden="true">&#8594;</span><div><span class="eyebrow">Human</span><h3>Approve consequential action</h3></div></div>
-      <div class="card panel-body"><h2>What that means in this demo.</h2><p>The model interprets the incident and scores ownership, severity, and escalation. The application routes only when the selected owner's probability meets your threshold. Ambiguous or low-confidence cases go to human review. Changing a threshold needs no model call; changing the business rubric changes the next request's criteria, not the deployed model.</p></div>
-      <div class="card panel-body"><h2>Choose the right tool.</h2><p>Use ordinary rules when structured inputs already determine the action unambiguously. Use a generative LLM for explanations, summaries, drafts, or open-ended reasoning. Combine them when useful: decide first, then generate content if needed.</p><p>Decision-1 does not write explanations. This dashboard shows model outputs and application policy, never an invented model rationale. A structured-output LLM can also return valid labels, but this demo's chat baseline does not expose native option probabilities. Probabilities are not guarantees of correctness or production calibration; validate criteria and thresholds on representative labeled data before enabling consequential actions.</p><p><a href="https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision" target="_blank" rel="noreferrer">Read Microsoft's Decision API documentation &#8599;</a></p></div>
     </section>
-    <footer><span>INCIDENT DISPATCH / synthetic operations demo</span><span id="footer-target">Self-contained rehearsal artifact</span><span>No production actions. No generated rationale.</span></footer>
+    <footer><span>INCIDENT DISPATCH / synthetic operations demo</span><span id="footer-target">Live Foundry required</span><span>No production actions. No generated rationale.</span></footer>
   </main>
   <script>
     "use strict";
@@ -300,47 +265,47 @@
 
 Evidence: Requests reach the payment authorization service and fail there before an authorization is issued. The same failure occurs across browsers and payment methods. Sign-in, product search, inventory, and unrelated APIs remain healthy; shared network and ingress probes are passing. Checkout probes outside the EU continue to succeed.
 
-Impact and response: Customers cannot buy through EU checkout, and retries do not help. No workaround has been confirmed. There is no evidence of duplicate charges or lost existing orders. The payment failure is reproducible, but its underlying cause and recovery time are not yet known.`, expected:"payments", score:2.92, escalation:.99},
+Impact and response: Customers cannot buy through EU checkout, and retries do not help. No workaround has been confirmed. There is no evidence of duplicate charges or lost existing orders. The payment failure is reproducible, but its underlying cause and recovery time are not yet known.`, expected:"payments"},
       {id:"INC-002", title:"Duplicate subscription charge", channel:"Support", message:`Report: One customer sees two settled charges for this month's subscription renewal and wants the duplicate refunded. They have one active subscription, received one renewal confirmation, and can still use the service normally.
 
 Evidence: The billing history shows two charges for the same renewal period. No declined authorization, checkout error, or sign-in failure was reported. A check of recent support reports has not found other matching complaints, and transaction monitoring shows no broad payment-processing degradation.
 
-Requested action: Review the renewal ledger, confirm whether the second charge is a duplicate, and arrange a refund if appropriate. The report concerns an individual billing correction, not an inability to make purchases. The reason for the extra charge has not been established; the available evidence does not justify assuming a platform-wide incident.`, expected:"support", score:1.02, escalation:.04},
+Requested action: Review the renewal ledger, confirm whether the second charge is a duplicate, and arrange a refund if appropriate. The report concerns an individual billing correction, not an inability to make purchases. The reason for the extra charge has not been established; the available evidence does not justify assuming a platform-wide incident.`, expected:"support"},
       {id:"INC-003", title:"Something is blocking orders", channel:"Chat", message:`Report: Several customers say they cannot complete an order after trying to sign in. One describes being sent back to the store; another says the page stopped progressing. The reports do not identify the failing screen or show whether authentication actually completed.
 
 Evidence gaps: No error codes, request traces, screenshots, or reproducible steps have been collected. The affected region, number of failed attempts, and start time are unknown. It is not clear whether the blocker is sign-in, session handling, checkout, payment authorization, or shared infrastructure. No verified component-specific health checks accompany the reports.
 
-Current response: Support is gathering the exact step that fails and whether the customer sees a payment or authentication error. There is a credible order-completion complaint, but insufficient evidence to assign a technical owner or establish the breadth of impact. Do not treat the phrase "after signing in" as proof that sign-in succeeded.`, expected:"uncertain", score:1.65, escalation:.35},
+Current response: Support is gathering the exact step that fails and whether the customer sees a payment or authentication error. There is a credible order-completion complaint, but insufficient evidence to assign a technical owner or establish the breadth of impact. Do not treat the phrase "after signing in" as proof that sign-in succeeded.`, expected:"uncertain"},
       {id:"INC-004", title:"Password resets failing", channel:"Support", message:`Observation: For the past 25 minutes, every attempted password reset has produced an "expired token" error immediately after the customer opens a newly issued reset link. Support reproduced the problem with fresh test accounts and links opened within one minute of issuance.
 
 Evidence: Reset emails arrive promptly, and issuing another link produces the same result. The failure occurs in multiple browsers and is not explained by an old email or a delayed click. Customers who remember their password can still sign in. Existing authenticated sessions, product browsing, checkout, and payment authorization remain healthy.
 
-Impact and response: Customers who have forgotten their password cannot regain account access. The problem affects all tested reset attempts, but it is not an outage of every store function. No reliable workaround or recovery time is available. Investigation has not yet established why freshly issued reset tokens are rejected.`, expected:"identity", score:2.28, escalation:.87},
+Impact and response: Customers who have forgotten their password cannot regain account access. The problem affects all tested reset attempts, but it is not an outage of every store function. No reliable workaround or recovery time is available. Investigation has not yet established why freshly issued reset tokens are rejected.`, expected:"identity"},
       {id:"INC-005", title:"Shared infrastructure failure", channel:"Telemetry", message:`Observation: Immediately after a shared ingress deployment, every public API began returning HTTP 503 across all serving regions. Product search, account profiles, sign-in, inventory, and checkout are all unavailable. Independent synthetic probes reproduce the failures.
 
 Evidence: Deployment validation found a corrupted shared ingress configuration that no longer forwards requests to healthy application services. Internal service health checks are passing, while requests through the public entry points fail. The symptoms span unrelated services rather than a single payment or authentication operation.
 
-Impact and response: Customers cannot browse reliably, access their accounts, or place orders anywhere in the store. There is no functioning alternate region or public access path. A rollback is being prepared but has not restored service. No data loss has been confirmed, and existing order records remain readable internally; the confirmed impact is a widespread outage.`, expected:"platform", score:2.99, escalation:.999},
+Impact and response: Customers cannot browse reliably, access their accounts, or place orders anywhere in the store. There is no functioning alternate region or public access path. A rollback is being prepared but has not restored service. No data loss has been confirmed, and existing order records remain readable internally; the confirmed impact is a widespread outage.`, expected:"platform"},
       {id:"INC-006", title:"Payment retries for regional customers", channel:"Telemetry", message:`Observation: Over the last 12 minutes, payment authorizations have repeatedly failed for 15 customers using one regional payment-processing path in the EU. Each affected customer is blocked from completing a purchase; retrying the same transaction has not succeeded.
 
 Evidence: The failures occur at payment authorization after sign-in, cart validation, and inventory checks succeed. Other payment-processing paths in the EU and checkout outside the region remain healthy. Shared infrastructure probes and unrelated APIs show no degradation. There is no evidence that the entire EU store or every payment method is unavailable.
 
-Impact and response: This is a confirmed multi-customer purchase blocker with limited regional scope, not a global outage or an individual refund request. No workaround has been verified for affected customers. The processing-path fault remains under investigation. Apply the active business rubric to the observed impact rather than assuming that limited scope always means low urgency.`, expected:"payments", score:2.08, escalation:.72, salesScore:2.91, salesEscalation:.98},
+Impact and response: This is a confirmed multi-customer purchase blocker with limited regional scope, not a global outage or an individual refund request. No workaround has been verified for affected customers. The processing-path fault remains under investigation. Apply the active business rubric to the observed impact rather than assuming that limited scope always means low urgency.`, expected:"payments"},
       {id:"INC-007", title:"Invoice download question", channel:"Support", message:`Request: A customer asks where to download last month's subscription invoice for their internal expense records. Their subscription is active, the renewal amount matches expectations, and they are not disputing a charge or requesting a refund.
 
 Evidence: The customer can sign in and open the account settings page. They have not attempted an invoice download and have not encountered an error, missing document, or broken link. They are unsure which menu contains historical invoices. Service monitoring shows no related incident, and no other customers have reported an invoice-access failure.
 
-Desired outcome: Provide navigation instructions for finding the billing history and downloading the invoice. If the document is actually missing or a download fails, collect that evidence separately. On the information available, this is a how-to question, not a confirmed billing-system, authentication, or infrastructure outage.`, expected:"support", score:.85, escalation:.01},
+Desired outcome: Provide navigation instructions for finding the billing history and downloading the invoice. If the document is actually missing or a download fails, collect that evidence separately. On the information available, this is a how-to question, not a confirmed billing-system, authentication, or infrastructure outage.`, expected:"support"},
       {id:"INC-008", title:"Sign-in failures after SSO update", channel:"Telemetry", message:`Observation: Following a single sign-on configuration update 20 minutes ago, new sign-in attempts fail for all enterprise customers. The identity service rejects the returned authentication token with invalid_audience. Repeated tests across enterprise sign-in connections reproduce the same error.
 
 Evidence: The rejection occurs during token validation, before a new application session is established. Existing authenticated sessions remain usable, and customers with those sessions can browse and complete purchases. Non-enterprise sign-in continues to work. Payment authorization and shared infrastructure probes are healthy.
 
-Impact and response: Enterprise users who need a new session cannot access their accounts, including users whose previous sessions expired. The configuration change is correlated with the failure, but the exact setting responsible has not yet been confirmed. Reversing the update is under review; no successful mitigation or reliable workaround for new enterprise sign-ins has been demonstrated.`, expected:"identity", score:2.57, escalation:.96},
+Impact and response: Enterprise users who need a new session cannot access their accounts, including users whose previous sessions expired. The configuration change is correlated with the failure, but the exact setting responsible has not yet been confirmed. Reversing the update is under review; no successful mitigation or reliable workaround for new enterprise sign-ins has been demonstrated.`, expected:"identity"},
       {id:"INC-009", title:"Search API degradation", channel:"Telemetry", message:`Observation: After a compute rollout, the product search API began timing out for many customers across several storefronts. Search requests frequently exceed the client timeout, and some return only after long delays. Direct product links still work, so the store is degraded rather than completely unavailable.
 
 Evidence: Search workers on the new compute pool show sustained saturation and a growing request backlog. Product catalog records remain readable through other endpoints. Sign-in, payment authorization, and checkout for customers who already have items in their carts remain healthy. The failures are associated with the search-serving compute path, not account access or payment processing.
 
-Impact and response: A substantial group of customers cannot reliably discover products, but existing carts can still be purchased. A rollout rollback is being evaluated and has not yet resolved the issue. No data loss is observed, and the exact reason for the compute saturation remains under investigation.`, expected:"platform", score:2.13, escalation:.76}
+Impact and response: A substantial group of customers cannot reliably discover products, but existing carts can still be purchased. A rollout rollback is being evaluated and has not yet resolved the issue. No data loss is observed, and the exact reason for the compute saturation remains under investigation.`, expected:"platform"}
     ];
     const $ = id => document.getElementById(id);
     const esc = text => String(text).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -348,14 +313,11 @@ Impact and response: A substantial group of customers cannot reliably discover p
     let selected = incidents[0].id;
     let filter = "all";
     let busy = false;
-    let streaming = false;
-    let stopEvaluation = false;
     let config = null;
     let evaluation = null;
-    const mode = () => $("mode").value;
-    const rubric = () => $("rubric").value;
-    const threshold = () => Number($("threshold").value) / 100;
-    const escalateThreshold = () => Number($("escalate-threshold").value) / 100;
+    const rubric = () => $("request-rubric").value;
+    const threshold = () => .8;
+    const escalateThreshold = () => .8;
     const review = r => r.team === "uncertain" || r.confidence < threshold();
     const escalated = r => r.escalation >= escalateThreshold();
     const pct = x => `${(x * 100).toFixed(1)}%`;
@@ -371,34 +333,13 @@ Impact and response: A substantial group of customers cannot reliably discover p
     function clearError() { $("error").hidden = true; }
     function setBusy(value) {
       busy = value;
-      for (const id of ["mode","rubric","rescore","reset","run-eval"]) $(id).disabled = value || (id==="run-eval" && (mode()!=="live" || !config?.baseline_deployment));
-      $("stream").disabled = value && !streaming;
-      for (const button of document.querySelectorAll("#detail button")) button.disabled = value;
+      $("run-eval").disabled = value || !config?.baseline_deployment;
+      for (const button of document.querySelectorAll("#detail button")) button.disabled = value || !config;
       $("request-incident").disabled=value;
       $("request-rubric").disabled=value;
     }
-    function rehearsal(incident) {
-      const original = SAMPLES.find(s => s.id === incident.id);
-      const enhanced = incident.id === "INC-003" && incident.message.endsWith("Sign-in succeeds. Payment authorization returns HTTP 500 for all EU transactions; infrastructure is healthy.");
-      if (!original || (incident.message !== original.message && !enhanced)) throw new Error("Rehearsal has no fixture for edited text. Switch to live Foundry to classify arbitrary input.");
-      const team = enhanced ? "payments" : original.expected;
-      let probabilities = {payments:.0125, identity:.0125, platform:.0125, support:.0125, uncertain:.0125};
-      probabilities[team] = .95;
-      if (team === "uncertain") probabilities = {payments:.27, identity:.22, platform:.09, support:.03, uncertain:.39};
-      const score = enhanced ? 2.92 : (rubric() === "sales" ? original.salesScore ?? original.score : original.score);
-      const escalation = enhanced ? .99 : (rubric() === "sales" ? original.salesEscalation ?? original.escalation : original.escalation);
-      const low = Math.floor(score), high = Math.ceil(score);
-      const severityProbabilities = {"0":0,"1":0,"2":0,"3":0};
-      severityProbabilities[String(low)] = 1-(score-low);
-      if (high !== low) severityProbabilities[String(high)] = score-low;
-      const raw = {model:"AUTHORED FIXTURE - NOT INFERENCE",answers:{
-        team:{type:"choice",choice:team,probabilities},
-        severity:{type:"score",score,probabilities:severityProbabilities},
-        escalate:{type:"noul",noul:escalation}
-      }};
-      return {team, probabilities, confidence:probabilities[team], severity:score, severity_probabilities:severityProbabilities, escalation, source:"rehearsal", model:"decision", latency_ms:null, cost_usd:null, usage:null, raw};
-    }
     async function predict(message, model="decision", chosenRubric=rubric()) {
+      if (!config) throw new Error("Live backend is unavailable. Start python app.py and reload.");
       const response = await fetch("/api/decision", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,rubric:chosenRubric,model})});
       let payload;
       try { payload = await response.json(); } catch { throw new Error(`Backend returned a non-JSON response (HTTP ${response.status}).`); }
@@ -410,7 +351,7 @@ Impact and response: A substantial group of customers cannot reliably discover p
       incident.result = null;
       render();
       try {
-        const result = mode()==="rehearsal" ? rehearsal(incident) : await predict(incident.message);
+        const result = await predict(incident.message);
         incident.result = {...result, rubric:rubric(), input:incident.message};
       } catch (error) { incident.error = error.message; throw error; }
       finally { render(); }
@@ -423,8 +364,6 @@ Impact and response: A substantial group of customers cannot reliably discover p
       $("k-latency").textContent = ms(percentile(live.map(i=>i.result.latency_ms),.5));
       $("k-cost").textContent = live.length ? cost(live.every(i=>i.result.cost_usd!==null)?live.reduce((sum,i)=>sum+i.result.cost_usd,0):null) : "--";
       $("latency-note").textContent = live.length ? "Backend HTTPS calls; not inference-only" : "Live measurements only";
-      $("threshold-label").textContent = pct(threshold());
-      $("escalate-label").textContent = pct(escalateThreshold());
       $("queue-label").textContent = `${done.length} scored / highest impact first`;
       const visible = incidents.filter(i=>filter==="all" || (filter==="pending" ? !i.result : i.result && (filter==="review" ? review(i.result) : escalated(i.result))));
       visible.sort((a,b)=>(b.result?.severity??-1)-(a.result?.severity??-1) || a.id.localeCompare(b.id));
@@ -439,7 +378,7 @@ Impact and response: A substantial group of customers cannot reliably discover p
     function renderModelInput() {
       const incident=incidents.find(i=>i.id===selected);
       const template=config?.decision_request_templates?.[rubric()];
-      $("definition-note").textContent=template?"Three bounded decisions. Expand a card's judgment instructions to see the exact rubric used by the model.":"Exact decision definitions require the local Python backend. Standalone rehearsal uses authored fixtures.";
+      $("definition-note").textContent=template?"Three bounded decisions. Expand a card's judgment instructions to see the exact rubric used by the model.":"Exact decision definitions require the local Python backend.";
       $("request-incident").innerHTML=incidents.map(i=>`<option value="${esc(i.id)}">${esc(i.id)} / ${esc(i.title)}</option>`).join("");
       $("request-incident").value=selected;
       $("request-rubric").value=rubric();
@@ -447,7 +386,7 @@ Impact and response: A substantial group of customers cannot reliably discover p
       $("request-rubric").disabled=busy;
       const message=incident.message.trim();
       $("request-state").textContent=JSON.stringify({incident:message},null,2);
-      $("request-note").textContent=template?"This is the next Decision-1 request body. The deployment name is replaced with a placeholder; the resource endpoint and authentication headers are not shown. Previewing makes no model call.":"Full request definitions require the local Python backend. Standalone rehearsal uses authored fixtures and does not send a request.";
+      $("request-note").textContent=template?"This is the next Decision-1 request body. The deployment name is replaced with a placeholder; the resource endpoint and authentication headers are not shown. Previewing makes no model call.":"Full request definitions require the local Python backend.";
       $("request-json").textContent=template?(message?JSON.stringify({...template,state:{incident:message}},null,2):"Enter incident text in the Operations desk before sending a request."):"Start python app.py to inspect the backend's exact request definitions.";
       const titles={team:"Who owns the incident?",severity:"How severe is the impact?",escalate:"Is immediate escalation warranted?"};
       const expanded=new Set([...$("request-questions").querySelectorAll("details[open]")].map(detail=>detail.dataset.question));
@@ -465,13 +404,13 @@ Impact and response: A substantial group of customers cannot reliably discover p
     }
     function renderDetail() {
       const incident=incidents.find(i=>i.id===selected), r=incident.result;
-      $("detail").innerHTML = `<div class="panel-head"><h2>Decision inspector</h2><span class="mono muted">${esc(incident.id)}</span></div><div class="panel-body"><label class="field"><span>Incident state</span><textarea id="incident-text" maxlength="6000" ${busy?"disabled":""}>${esc(incident.message)}</textarea></label><div class="button-stack"><button class="primary" id="classify" ${busy?"disabled":""}>${r?"Rescore incident":"Classify incident"}</button><button id="view-request" ${busy?"disabled":""}>View decision definition</button>${incident.id==="INC-003"?`<button id="context" ${busy?"disabled":""}>Add payment failure evidence</button>`:""}</div>${incident.error?`<div class="callout danger-text">${esc(incident.error)}</div>`:""}${!r?'<div class="empty">Select Classify to inspect the three typed decisions.</div>':`
+      $("detail").innerHTML = `<div class="panel-head"><h2>Decision inspector</h2><span class="mono muted">${esc(incident.id)}</span></div><div class="panel-body"><label class="field"><span>Incident state</span><textarea id="incident-text" maxlength="6000" ${busy?"disabled":""}>${esc(incident.message)}</textarea></label><div class="button-stack"><button class="primary" id="classify" ${busy||!config?"disabled":""}>${r?"Rescore incident":"Classify incident"}</button><button id="view-request" ${busy||!config?"disabled":""}>View decision definition</button>${incident.id==="INC-003"?`<button id="context" ${busy||!config?"disabled":""}>Add payment failure evidence</button>`:""}</div>${incident.error?`<div class="callout danger-text">${esc(incident.error)}</div>`:""}${!r?'<div class="empty">Select Classify to inspect the three typed decisions.</div>':`
         <div id="decision-results"><div class="divider"></div><div class="eyebrow">choice / owner</div><h3>${esc(TEAMS[r.team])}</h3>${bars(r.probabilities,r.team,TEAMS)}
         <div class="callout"><b>Application policy:</b> ${review(r)?"Hold routing for human review.":"Eligible for automatic routing (demo only)."} ${r.team==="uncertain"?"The model selected the abstention option.":`Selected option probability ${pct(r.confidence)}; threshold ${pct(threshold())}.`}</div>
         <div class="decision-box"><div><span class="eyebrow">score / impact</span><small>Weighted score on the 0-3 rubric</small></div><strong>${r.severity.toFixed(2)}<span class="muted" style="font-size:12px"> / 3</span></strong></div>
         ${bars(r.severity_probabilities,String(Math.round(r.severity)),Object.fromEntries(LEVELS.map((l,i)=>[String(i),l])))}
         <div class="decision-box"><div><span class="eyebrow">noul / escalate</span><small>${escalated(r)?"Recommend immediate human attention":"Below immediate escalation threshold"}</small></div><strong>${pct(r.escalation)}</strong></div>
-        <p class="muted" style="font-size:12px">${r.source==="live"?`LIVE / ${esc(r.deployment)} / ${ms(r.latency_ms)} / ${r.usage.input_tokens} input tokens`:"REHEARSAL / authored fixture / no latency or cost"}<br>Rubric: ${r.rubric==="sales"?"Peak sales event":"Standard operations"}</p>
+        <p class="muted" style="font-size:12px">LIVE / ${esc(r.deployment)} / ${ms(r.latency_ms)} / ${r.usage.input_tokens} input tokens<br>Rubric: ${r.rubric==="sales"?"Peak sales event":"Standard operations"}</p>
         <details><summary>Inspect raw typed response</summary><pre>${esc(JSON.stringify(r.raw,null,2))}</pre></details></div>`}</div>`;
       $("classify").onclick = async()=>{
         incident.message=$("incident-text").value;
@@ -492,18 +431,6 @@ Impact and response: A substantial group of customers cannot reliably discover p
         render(false);
         $("classify").textContent="Classify updated incident";
       };
-    }
-    async function stream() {
-      if (streaming) { streaming=false; $("stream").textContent="Stopping after current incident..."; $("stream").disabled=true; return; }
-      streaming=true; setBusy(true); clearError(); $("stream").textContent="Stop after current incident";
-      try {
-        for(const incident of incidents.filter(i=>!i.result)) {
-          if(!streaming) break;
-          selected=incident.id; await classify(incident);
-          await new Promise(resolve=>setTimeout(resolve,mode()==="rehearsal"?450:100));
-        }
-      } catch(error){ showError(error); }
-      finally { streaming=false; $("stream").textContent="Start incident stream"; setBusy(false); render(); }
     }
     function metrics(model) {
       const entries=evaluation?.rows.map(row=>row[model]).filter(Boolean)??[];
@@ -537,36 +464,34 @@ Impact and response: A substantial group of customers cannot reliably discover p
       }).join("");
     }
     async function runEvaluation() {
-      if(mode()!=="live") return;
-      setBusy(true); clearError(); stopEvaluation=false; $("stop-eval").disabled=false; $("export").disabled=true;
+      if(!config?.baseline_deployment) { showError(new Error("Configure the live backend and an LLM baseline deployment to compare models.")); return; }
+      setBusy(true); clearError(); $("eval-status").hidden=false;
       evaluation={started_at:new Date().toISOString(),mode:"live",rubric:rubric(),project:config.project,decision_deployment:config.decision_deployment,baseline_deployment:config.baseline_deployment,baseline_model_name:config.baseline_model_name,baseline_reasoning_effort:config.baseline_reasoning_effort,method:`${SAMPLES.length} synthetic routing labels. One excluded warm-up per model. Sequential paired calls. No retries. Failed attempts count as routing misses; latency and cost cover successful calls only.`,warmups:{},rows:SAMPLES.map(s=>({id:s.id,title:s.title,message:s.message,expected:s.expected}))};
       renderEvaluation();
       try {
         for(const model of ["decision","baseline"]) {
-          if(stopEvaluation) break;
           $("eval-status").textContent=`Warming up ${model} (excluded from metrics)...`;
           await predict(SAMPLES[0].message,model,evaluation.rubric);
           evaluation.warmups[model]="completed; excluded";
         }
         for(const row of evaluation.rows) {
           for(const model of ["decision","baseline"]) {
-            if(stopEvaluation) break;
-            $("eval-status").textContent=`Evaluating ${row.id} / ${model}. Completed results remain visible.`;
+            $("eval-status").textContent=`${row.id} / ${model}...`;
             try { row[model]={expected:row.expected,result:await predict(row.message,model,evaluation.rubric)}; }
             catch(error) { row[model]={expected:row.expected,error:error.message}; }
             renderEvaluation();
           }
-          if(stopEvaluation) break;
         }
         const failures=evaluation.rows.reduce((n,row)=>n+["decision","baseline"].filter(m=>row[m]?.error).length,0);
-        evaluation.status=stopEvaluation?"stopped":"completed";
-        $("eval-status").textContent=`${stopEvaluation?"Stopped; partial results":"Comparison complete"}. ${failures} failed calls. Small synthetic sample; not a general performance claim.`;
+        evaluation.status="completed";
+        $("eval-status").textContent=failures?`${failures} failed calls. See results below.`:"";
+        $("eval-status").hidden=!failures;
       } catch(error) {
         evaluation.status="warmup failed"; evaluation.error=error.message;
-        $("eval-status").textContent="Warm-up failed. No fabricated measurements or fixture fallback."; showError(error);
+        $("eval-status").textContent="Warm-up failed."; showError(error);
       } finally {
         evaluation.finished_at=new Date().toISOString();
-        $("stop-eval").disabled=true; $("export").disabled=false; setBusy(false); render();
+        setBusy(false); render();
       }
     }
     document.querySelectorAll("[data-tab]").forEach(button=>button.onclick=()=>{
@@ -579,50 +504,30 @@ Impact and response: A substantial group of customers cannot reliably discover p
       const button=event.target.closest("[data-id]");
       if(button){selected=button.dataset.id; render();}
     };
-    $("stream").onclick=stream;
-    $("threshold").oninput=render;
-    $("escalate-threshold").oninput=render;
-    $("rescore").onclick=async()=>{
-      const processed=incidents.filter(i=>i.result); setBusy(true); clearError();
-      try { for(const incident of processed) { selected=incident.id; await classify(incident); } }
-      catch(error){showError(error);}
-      finally{setBusy(false);render();}
-    };
-    $("rubric").onchange=()=>{
-      $("rubric-note").textContent=rubric()==="sales"?"Confirmed multi-customer checkout failures become Critical. Rescore to apply.":"Rank by observed impact. Rescore to apply.";
-      $("notice").textContent="Rubric changed. Existing cards retain their original rubric until rescored; it is shown in the inspector.";
+    $("request-rubric").onchange=()=>{
+      $("notice").textContent="Rubric changed. Rescore incidents in the Decision Inspector to update existing decisions.";
+      $("notice").hidden=false;
       renderModelInput();
     };
     $("request-incident").onchange=()=>{selected=$("request-incident").value;render();};
-    $("request-rubric").onchange=()=>{$("rubric").value=$("request-rubric").value;$("rubric").onchange();};
-    function reset() { incidents=SAMPLES.map(s=>({...s,result:null,error:null})); selected=incidents[0].id; clearError(); render(); }
-    $("reset").onclick=reset;
-    $("mode").onchange=()=>{
-      reset(); evaluation=null; renderEvaluation(); $("export").disabled=true; $("eval-rows").innerHTML='<tr><td colspan="5">Run a comparison to collect actual results.</td></tr>';
-      $("notice").textContent=mode()==="live"?"Live inference on synthetic incidents. Every result comes from Foundry; errors never fall back to rehearsal.":"REHEARSAL: authored fixtures only. No live inference, token usage, latency, or cost.";
-      $("connection").innerHTML=mode()==="live"?'<span class="dot"></span> Live / Microsoft Foundry':'<span class="dot rehearsal"></span> Rehearsal / synthetic fixtures';
-      setBusy(false);
-    };
     $("theme").onclick=()=>document.documentElement.setAttribute("data-theme",document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
     $("run-eval").onclick=runEvaluation;
-    $("stop-eval").onclick=()=>{stopEvaluation=true; $("stop-eval").disabled=true; $("eval-status").textContent="Stopping after the current request...";};
-    $("export").onclick=()=>{
-      if(!evaluation) return;
-      const blob=new Blob([JSON.stringify(evaluation,null,2)],{type:"application/json"}), url=URL.createObjectURL(blob), a=document.createElement("a");
-      a.href=url; a.download="incident-dispatch-evaluation.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
-    };
     async function initialize() {
       render(); renderEvaluation(); setBusy(false);
-      if(location.protocol==="file:") return;
       try {
+        if(location.protocol==="file:") throw new Error("Start python app.py and open http://127.0.0.1:8765 instead of opening index.html directly.");
         const response=await fetch("/api/config");
         if(!response.ok) throw new Error(`Configuration endpoint returned HTTP ${response.status}.`);
         config=await response.json();
-        $("mode").options[1].disabled=false; $("mode").value="live"; $("mode").onchange();
+        $("connection").innerHTML='<span class="dot"></span> Live / Microsoft Foundry';
         $("footer-target").textContent=`${config.project} / Decision: ${config.decision_deployment} / LLM: ${config.baseline_deployment||"not configured"}`;
-        $("eval-status").textContent=`Baseline: ${config.baseline_deployment}. ${config.baseline_priced?"Cost uses configured rates.":"LLM cost is unconfigured; actual token usage will be shown."} One warm-up per model is excluded.`;
-        renderEvaluation();
-      } catch(error) { showError(new Error(`Live backend unavailable: ${error.message} Rehearsal remains explicitly selected.`)); }
+        render(); renderEvaluation(); setBusy(false);
+      } catch(error) {
+        config=null;
+        $("connection").innerHTML='<span class="dot offline"></span> Backend unavailable';
+        showError(new Error(`Live backend unavailable: ${error.message}`));
+        setBusy(false);
+      }
     }
     initialize();
   </script>
